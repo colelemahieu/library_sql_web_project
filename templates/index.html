@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <link href="https://fonts.googleapis.com/css2?family=Libre+Baskerville:wght@700&display=swap" rel="stylesheet">
+    <title>My Library</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 2rem;
+	    background-color: #D6D6CE;
+        }
+        h1 {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+        .card-container {
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin-top: 2vh; 
+            gap: 15px;
+        }
+        .card {
+            background-color: #D6D6CE;
+            /*border-radius: 10px;*/
+            padding: 1rem;
+	    flex: 1 1 150px;
+            max-width: 150px;
+            border: none;
+	    box-shadow: none;
+            font-family: 'Libre Baskerville', serif;
+	    text-align: center;
+        }
+        .card h2 {
+            font-size: 1.2rem;
+            margin-bottom: 0.5rem;
+        }
+        .card p {
+            font-size: 1rem;
+            color: #555;
+        }
+	.card img {
+    max-width: 100%;
+    height: auto;
+    border-radius: 4px;
+}
+       .search-section h1 {
+    font-family: 'Libre Baskerville', serif;
+}
+       .table-container {
+    max-height: 400px;  
+    overflow-y: auto;    
+    margin-top: 1rem;
+    border: 1px solid #999;  
+}
+       #search-table thead th {
+    position: sticky;
+    top: 0;
+    background-color: #3C5A77;  
+    color: white;               
+    font-family: 'Libre Baskerville', serif;
+    z-index: 2;
+    border-bottom: 2px solid #999;
+    padding: 0.75rem;
+    text-align: left;
+}
+       #search-table {
+    border-collapse: collapse;
+    margin-top: 0;
+}
+
+       .bookmark h1 {
+    white-space: nowrap;
+    font-family: 'Libre Baskerville', serif;
+    font-size: 1rem;
+    margin: 0;
+
+    /* rotate text */
+    transform: rotate(-90deg);    
+    transform-origin: center;     
+    display: inline-block;         
+}
+       .bookmark {
+    width: 75px;
+    height: 75vh;
+    /*background: url('https://www.transparenttextures.com/patterns/dark-fabric.png') repeat;*/
+    background-color: #3C5A77;
+    color: white;
+    position: absolute;
+    top: 5vh;
+    left: 10px;
+    font-family: 'Libre Baskerville', serif;
+    font-size: 1rem;
+    z-index: 1000;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.2);
+
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    border-radius: 0 0 5px 5px;
+    padding: 0;
+}
+
+/* Make notch with same texture */
+.bookmark::after {
+    content: "";
+    position: absolute;
+    bottom: -20px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 40px;
+    height: 20px;
+
+    background-color: #3C5A77;
+
+    clip-path: polygon(50% 100%, 0 0, 100% 0);
+}
+    .search-section {
+            margin-top: 50px;
+            margin-left: 100px;  /* align with cards */
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 1rem;
+        }
+        th, td {
+            padding: 0.5rem;
+            text-align: left;
+            border-bottom: 1px solid #999;
+        }
+	input[type="text"] {
+            padding: 0.5rem;
+            font-size: 1rem;
+            width: 300px;
+        }
+        button {
+            padding: 0.5rem 1rem;
+            font-size: 1rem;
+        }
+      
+    </style>
+</head>
+<body>
+    <div class="bookmark">
+        <h1>Recently read from my library</h1>
+    </div>    
+
+    <div class="card-container">
+        {% for book in recent_books %}
+        <div class="card">
+            <img src="{{ book['cover_url'] }}" alt="Cover of {{ book['title'] }}">
+	    <h2>{{ book['title'] }}</h2>
+            <p>{{ book['author'] }}</p>
+        </div>
+        {% endfor %}
+    </div>
+
+    <div class="search-section">
+        <h1>Search my library</h1>
+        <form method="get" action="/search">
+            <input type="text" name="q" placeholder="Search by title, author, genre">
+            <button type="submit">Search</button>
+        </form>
+
+        {% if books %}
+        <div class="table-container">
+	 <table id="search-table">
+            <thead>
+                <tr>
+                    <th> </th>
+		    <th>Title</th>
+                    <th>Author</th>
+                    <th>Genre</th>
+                    <th>Year Read</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for book in books %}
+                <tr>
+                    <td>{{ loop.index }}</td>
+		    <td>{{ book['title'] }}</td>
+                    <td>{{ book['author'] }}</td>
+                    <td>{{ book['genre'] }}</td>
+                    <td>{{ book['year_read'] }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+	</div>
+        {% endif %}
+    </div>
+
+</body>
+</html>
+

@@ -1,0 +1,53 @@
+from flask import Flask, render_template
+import sqlite3, requests
+
+app = Flask(__name__)
+
+def get_cover_url(title, author):
+    """Fetch cover image URL from Open Library API using title + author."""
+    url = "https://openlibrary.org/search.json"
+    params = {"title": title, "author": author, "limit": 1}
+    response = requests.get(url, params=params)
+
+    if response.status_code == 200:
+        data = response.json()
+        if "docs" in data and len(data["docs"]) > 0:
+            book_doc = data["docs"][0]
+            if "cover_i" in book_doc:
+                cover_id = book_doc["cover_i"]
+                return f"https://covers.openlibrary.org/b/id/{cover_id}-M.jpg"
+    
+    # fallback if no cover found
+    return "/static/placeholder.png"
+
+@app.route("/")
+def home():
+    conn = sqlite3.connect("mylibrary.db")
+    conn.row_factory = sqlite3.Row
+    cur = conn.cursor()
+
+    # Get last 4 books
+    cur.execute("""
+        SELECT title, author
+        FROM books
+        WHERE year_read IS NOT NULL
+        ORDER BY year_read DESC
+        LIMIT 4
+    """)
+    recent_books = cur.fetchall()
+    conn.close()
+
+    # Add cover URLs dynamically
+    books_with_covers = []
+    for book in recent_books:
+        cover_url = get_cover_url(book["title"], book["author"])
+        books_with_covers.append({
+            "title": book["title"],
+            "author": book["author"],
+            "cover_url": cover_url
+        })
+
+    return render_template("index.html", recent_books=books_with_covers)
+
+if __name__ == "__main__":
+    app.run(debug=True)
