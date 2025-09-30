@@ -13,6 +13,78 @@
             text-align: center;
             margin-bottom: 2rem;
         }
+
+.page-title {
+    font-family: 'Libre Baskerville', serif;
+    text-align: left;
+    margin: 0 0 2rem 0;  
+}
+
+.bookshelf-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  margin: 40px 0;
+  text-align: center;
+  font-family: 'Libre Baskerville', serif;
+}
+
+
+.shelf {
+  width: 70%;
+  max-width: 700px; 
+  height: 120px;
+  background-color: #422d1a; 
+  border: 12px solid #754f2e; 
+  display: flex;
+  align-items: flex-end;
+  box-sizing: border-box;
+  overflow: hidden;
+}
+
+.books {
+  display: flex;
+  align-items: flex-end;
+  height: 100%;
+}
+
+.book {
+  width: 20px;
+  margin-right: 3px;
+  border-radius: 2px;
+  box-shadow: 1px 0 2px rgba(0,0,0,0.4);
+  border-radius: 2px;
+  position: relative;
+  display: inline-block;
+}
+
+.book-line {
+  position: absolute;
+  left: 2px;
+  right: 2px;
+  height: 2px;
+  background-color: rgba(255, 255, 255, 0.25); /* subtle highlight */
+  box-shadow: 0 1px rgba(0, 0, 0, 0.4);        /* shadow for depth */
+  border-radius: 1px;
+}
+
+.bookshelf-row {
+  display: flex;
+  align-items: center; /* vertically align text with shelf */
+  gap: 20px; /* space between shelf and text */
+  flex-wrap: wrap; /* allow wrapping on smaller screens */
+}
+
+.shelf-text {
+  font-family: 'Libre Baskerville', serif;
+  font-size: 1.1rem;
+  margin: 0;
+  max-width: 100px; 
+  line-height: 1.4;  
+  word-wrap: break-word;
+}
+
 .card-container {
   display: flex;
   align-items: center;    
@@ -139,6 +211,9 @@
     </style>
 </head>
 <body>
+
+<h1 class="page-title">My Library</h1>
+
 <div class="recent-section">
   <div class="bookmark">
       <h1>Recently read from my library</h1>
@@ -190,6 +265,15 @@
 	</div>
         {% endif %}
     </div>
+
+<div class="bookshelf-container">  
+	<div id="shelf" class="shelf" data-percentage="{{ stats.percentage }}"> 
+		<div id="books" class="books"></div> 
+	</div>
+	<p class="shelf-text">{{ stats.read }} of {{ stats.total }} books read ({{ stats.percentage }}%)</p>
+</div>
+
+<script src="{{ url_for('static', filename='bookshelf.js') }}"></script>
 
 </body>
 </html>

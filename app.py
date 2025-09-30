@@ -3,6 +3,25 @@ import sqlite3, requests
 
 app = Flask(__name__)
 
+def get_read_stats():
+    conn = sqlite3.connect("mylibrary.db")
+    cur = conn.cursor()
+
+    cur.execute("SELECT COUNT(*) FROM books")
+    total = cur.fetchone()[0]
+
+    cur.execute("SELECT COUNT(*) FROM books WHERE year_read IS NOT NULL")
+    read = cur.fetchone()[0]
+
+    conn.close()
+
+    percentage = 0
+    if total > 0:
+        percentage = round((read / total) * 100)
+
+    return {"total": total, "read": read, "percentage": percentage}
+
+
 def get_books(query=None):
     conn = sqlite3.connect("mylibrary.db")
     conn.row_factory = sqlite3.Row
@@ -91,8 +110,9 @@ def get_recent_books():
 def home():
     recent_books = get_recent_books()
     books = get_books()
+    stats = get_read_stats()
 
-    return render_template("index.html", recent_books=recent_books, books=books)
+    return render_template("index.html", recent_books=recent_books, books=books, stats=stats)
 
 
 @app.route("/search")
@@ -100,7 +120,9 @@ def search():
     query = request.args.get("q", "").strip()
     recent_books = get_recent_books()  
     books = get_books(query)
-    return render_template("index.html", recent_books=recent_books, books=books)
+    stats = get_read_stats()
+
+    return render_template("index.html", recent_books=recent_books, books=books, stats=stats)
 
 
 if __name__ == "__main__":
