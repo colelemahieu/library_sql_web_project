@@ -2,11 +2,10 @@ function renderShelf(percentageRead) {
   const shelf = document.getElementById("shelf");
   const booksContainer = document.getElementById("books");
 
-  // Clear old book
   booksContainer.innerHTML = "";
 
-  const shelfWidth = shelf.offsetWidth - 20; // account for padding
-  const baseBookWidth = 22; // width + margin
+  const shelfWidth = shelf.offsetWidth - 20; 
+  const baseBookWidth = 22; 
   const fillWidth = shelfWidth * (percentageRead / 100);
 
   let booksToShow = Math.floor(fillWidth / baseBookWidth);
@@ -31,7 +30,6 @@ function renderShelf(percentageRead) {
       const line = document.createElement("div");
       line.classList.add("book-line");
 
-      // Evenly spaced in ridgeMin → ridgeMax
       const topPercent = ridgeMin + ((ridgeMax - ridgeMin) / (lineCount + 1)) * (j + 1);
       line.style.top = topPercent + "%";
 
