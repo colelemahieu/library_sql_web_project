@@ -81,7 +81,7 @@ def get_cover_url(title, author):
 
 
 def get_recent_books():
-    """Fetch 4 most recently read books with covers."""
+    """Fetch 8 most recently read books with covers."""
     conn = sqlite3.connect("mylibrary.db")
     conn.row_factory = sqlite3.Row
     cur = conn.cursor()
@@ -91,7 +91,7 @@ def get_recent_books():
         FROM books
         WHERE year_read IS NOT NULL
         ORDER BY year_read DESC
-        LIMIT 4
+        LIMIT 8
     """)
     rows = cur.fetchall()
     conn.close()

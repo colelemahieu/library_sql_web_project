@@ -14,6 +14,38 @@
             margin-bottom: 2rem;
         }
 
+.carousel-wrapper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  position: relative;
+}
+.carousel-button {
+  font-size: 2rem;
+  position: absolute;
+  top: 30%;  
+  transform: translateY(-50%); 
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.carousel-button.right {
+  right: -50px;
+}
+.carousel-button.left {
+  left: -50px;
+}
+.carousel-button:disabled {
+  opacity: 0.3;
+  cursor: default;
+}
 .page-title {
     font-family: 'Libre Baskerville', serif;
     text-align: left;
@@ -75,22 +107,30 @@
   line-height: 1.4;  
   word-wrap: break-word;
 }
-
+.card-container-wrapper {
+  display: inline-flex;
+  justify-content: center;
+  position: relative;
+}
 .card-container {
   display: flex;
-  align-items: center;    
-  justify-content: center;
-  gap: 15px;
-  flex: 1;               
-  overflow-x: auto;       
+  gap: var(--card-gap);
+  flex-wrap: nowrap;
+  overflow-x: hidden;
+  scroll-behavior: smooth;
+  width: calc((var(--card-width) * 4) + (var(--card-gap) * 3));
 }
 .card {
-  flex: 0 0 150px;
-  max-width: 150px;
-  padding: 1rem;
+  flex: 0 0 var(--card-width);
+  max-width: var(--card-width);
   background-color: #D6D6CE;
   font-family: 'Libre Baskerville', serif;
   text-align: center;
+  flex: 0 0 var(--card-width);
+}
+:root {
+  --card-width: 150px;
+  --card-gap: 20px;
 }
 .card h2 {
   font-size: 1.2rem;
@@ -209,14 +249,24 @@
       <h1>Recently read from my library</h1>
   </div>
 
-  <div class="card-container">
-      {% for book in recent_books %}
-      <div class="card">
-          <img src="{{ book['cover_url'] }}" alt="Cover of {{ book['title'] }}">
-          <h2>{{ book['title'] }}</h2>
-          <p>{{ book['author'] }}</p>
+  <div class="carousel-wrapper">
+       <div class="card-container-wrapper">
+    	<button id="arrow-left" class="carousel-button left" onclick="scrollCarousel(-1)">&#10094;</button>
+
+	<div class="card-container" id="carousel">
+        {% if recent_books %}
+          {% for book in recent_books %}      
+      	  <div class="card">
+            <img src="{{ book['cover_url'] }}" alt="Cover of {{ book['title'] }}">
+            <h2>{{ book['title'] }}</h2>
+            <p>{{ book['author'] }}</p>
+          </div>
+	  {% endfor %}
+	 {% endif %}
+	</div>
+
+        <button id="arrow-right" class="carousel-button right" onclick="scrollCarousel(1)">&#10095;</button>
       </div>
-      {% endfor %}
   </div>
 </div>
 
@@ -264,6 +314,7 @@
 </div>
 
 <script src="{{ url_for('static', filename='bookshelf.js') }}"></script>
+<script src="{{ url_for('static', filename='carousel.js') }}"></script>
 
 </body>
 </html>
