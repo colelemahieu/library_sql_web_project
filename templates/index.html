@@ -14,6 +14,48 @@
             margin-bottom: 2rem;
         }
 
+.genre-bar {
+  display: flex;
+  height: 25px;
+  width: 100%;
+  border-radius: 6px;
+  overflow: hidden;
+  margin-bottom: 6px;
+  border: 1px solid #999;
+}
+.genre-segment {
+  height: 100%;
+  transition: all 0.3s ease;
+}
+.genre-segment:hover {
+  filter: brightness(1.15);
+  cursor: pointer;
+}
+.genre-segment.active {
+  outline: 2px solid #000;
+  filter: brightness(1.2);
+}
+.genre-legend-item.active {
+  text-decoration: underline;
+  font-weight: bold;
+}
+
+.genre-legend {
+  margin-top: 0;
+  text-align: center;
+  font-family: 'Libre Baskerville', serif;
+  font-size: 0.95rem;
+  color: #333;
+}
+.genre-legend span {
+  display: inline-block;
+  margin: 5px 10px;
+}
+.genre-legend span span {
+  vertical-align: middle;
+  border-radius: 2px;
+  box-shadow: 0 0 2px rgba(0,0,0,0.3);
+}
 .carousel-wrapper {
   display: flex;
   align-items: center;
@@ -244,6 +286,7 @@
 
 <h1 class="page-title">My Library</h1>
 
+
 <div class="recent-section">
   <div class="bookmark">
       <h1>Recently read from my library</h1>
@@ -271,10 +314,31 @@
 </div>
 
 
+
     <div class="search-section">
         <h1>Search my library</h1>
+
+
+	<div class="genre-bar">
+  	  {% for g in genre_proportions %}
+            <div class="genre-segment" data-genre="{{ g.genre }}" style="width: {{ g.percentage }}%; background-color: {{ genre_color_map.get(g.genre, '#cccccc') }};" title="{{ g.genre }} ({{ g.count }} books)">
+            </div>
+         {% endfor %}
+        </div>
+
+        <div class="genre-legend">
+  	  {% for g in genre_proportions %}
+            <span class="genre-legend-item" data-genre="{{ g.genre }}">
+            <span style="display:inline-block; width:12px; height:12px; background-color: {{ genre_color_map.get(g.genre, '#cccccc') }}; margin-right:4px;"></span>
+          {{ g.genre }}
+          </span>
+          {% endfor %}
+            </div>
+	
+
+        <br>
         <form method="get" action="/search">
-            <input type="text" name="q" placeholder="Search by title, author, genre">
+            <input type="text" name="q" placeholder="Search by title or author">
             <button type="submit">Search</button>
         </form>
 
@@ -315,6 +379,7 @@
 
 <script src="{{ url_for('static', filename='bookshelf.js') }}"></script>
 <script src="{{ url_for('static', filename='carousel.js') }}"></script>
+<script src="{{ url_for('static', filename='filterTable.js') }}"></script>
 
 </body>
 </html>

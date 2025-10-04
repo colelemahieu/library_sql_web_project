@@ -3,6 +3,16 @@ import sqlite3, requests
 
 app = Flask(__name__)
 
+GENRE_COLOR_MAP = {
+    "Science Fiction": "#0077b6",  # Blue
+    "Fantasy": "#2b9348",          # Green
+    "Classic": "#a11d33",          # Red
+    "Fiction": "#8e9aaf",          # Gray
+    "Mystery": "#9d4edd",          # Purple
+    "Historical": "#7f4f24"        # Brown
+}
+
+
 def get_read_stats():
     conn = sqlite3.connect("mylibrary.db")
     cur = conn.cursor()
@@ -106,13 +116,36 @@ def get_recent_books():
     return books
 
 
+
+def get_genre_proportions():
+    conn = sqlite3.connect("mylibrary.db")
+    cur = conn.cursor()
+
+    cur.execute("SELECT genre, COUNT(*) FROM books GROUP BY genre")
+    rows = cur.fetchall()
+    conn.close()
+
+    total = sum(count for _, count in rows)
+    if total == 0:
+        return []
+
+    # Return a list of dicts for easy looping in Jinja
+    proportions = [
+        {"genre": genre, "count": count, "percentage": (count / total) * 100}
+        for genre, count in rows
+    ]
+
+    return proportions
+
+
 @app.route("/")
 def home():
     recent_books = get_recent_books()
     books = get_books()
     stats = get_read_stats()
+    genre_proportions = get_genre_proportions()
 
-    return render_template("index.html", recent_books=recent_books, books=books, stats=stats)
+    return render_template("index.html", recent_books=recent_books, books=books, stats=stats, genre_proportions=genre_proportions, genre_color_map=GENRE_COLOR_MAP)
 
 
 @app.route("/search")
@@ -121,8 +154,9 @@ def search():
     recent_books = get_recent_books()  
     books = get_books(query)
     stats = get_read_stats()
+    genre_proportions = get_genre_proportions()
 
-    return render_template("index.html", recent_books=recent_books, books=books, stats=stats)
+    return render_template("index.html", recent_books=recent_books, books=books, stats=stats, genre_proportions=genre_proportions, genre_color_map=GENRE_COLOR_MAP)
 
 
 if __name__ == "__main__":
