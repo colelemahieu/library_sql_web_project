@@ -48,10 +48,10 @@ def get_books(query=None):
     books = cur.fetchall()
     conn.close()
 
-    # Sort in Python: last name first, then title
+    # Sort in Python: last name first, then first name, then title
     books = sorted(
         books,
-        key=lambda b: (b["author"].split()[-1], b["title"])
+        key=lambda b: (b["author"].split()[-1], " ".join(b["author"].split()[:-1]), b["title"])
     )
 
     return books
