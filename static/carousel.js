@@ -4,7 +4,7 @@ function scrollCarousel(direction) {
     if (!card) return;
 
     const cardWidth = card.offsetWidth + 20; 
-    container.scrollBy({ left: direction * cardWidth * 4, behavior: 'smooth' });
+    container.scrollBy({ left: direction * cardWidth * 5, behavior: 'smooth' });
 }
 
 function updateArrows() {
