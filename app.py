@@ -17,19 +17,25 @@ def get_read_stats():
     conn = sqlite3.connect("mylibrary.db")
     cur = conn.cursor()
 
+    # total number books
     cur.execute("SELECT COUNT(*) FROM books")
-    total = cur.fetchone()[0]
+    total_books = cur.fetchone()[0]
 
+    # total pages
+    cur.execute("SELECT SUM(pages) FROM books WHERE pages IS NOT NULL")
+    total_pages = cur.fetchone()[0] or 0
+
+    # books read
     cur.execute("SELECT COUNT(*) FROM books WHERE year_read IS NOT NULL")
     read = cur.fetchone()[0]
 
     conn.close()
 
     percentage = 0
-    if total > 0:
-        percentage = round((read / total) * 100)
+    if total_books > 0:
+        percentage = round((read / total_books) * 100)
 
-    return {"total": total, "read": read, "percentage": percentage}
+    return {"total": total_books, "total_pages": total_pages, "read": read, "percentage": percentage}
 
 
 def get_books(query=None):

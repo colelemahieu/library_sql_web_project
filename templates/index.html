@@ -1,18 +1,84 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <link href="https://fonts.googleapis.com/css2?family=Libre+Baskerville:wght@700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Libre+Baskerville:wght@700&family=Aquiline+Two&display=swap" rel="stylesheet">
+
     <title>My Library</title>
     <style>
         body {
             font-family: Arial, sans-serif;
-            padding: 2rem;
+            margin: 0;
+	    padding: 0;
 	    background-color: #D6D6CE;
         }
         h1 {
-            text-align: center;
             margin-bottom: 2rem;
         }
+
+.library-header {
+  /* font-family: 'Libre Baskerville', serif;
+  background-image: url('static/Images/corkboard.jpg');
+  background-size: cover;
+  background-repeat: no-repeat;
+  background-position: center; */
+  background-color: #3C5A77; 
+  color: white;
+  text-align: left;
+  padding: 15px 0 20px; 
+  position: relative;
+  box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+}
+
+.library-header h1 {
+  font-size: 2.8em;
+  margin-bottom: 15px;
+  margin-left: 1rem;
+  font-weight: 600;
+  text-shadow: 1px 1px 3px rgba(0,0,0,0.4);
+}
+
+.stat-container {
+  display: flex;
+  justify-content: flex-end;
+  gap: 30px;
+  position: absolute;
+  right: 2rem;
+  bottom: -80px; 
+}
+
+.stickyNote {
+  background-image: url('static/Images/sticky_note.jpg');
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: center top;   
+  border: none;
+  width: 8rem;
+  height: 8rem;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;      
+  align-items: center;
+  padding: 3.75rem 1rem 0.75rem;     
+  text-align: center;
+  color: #3e2f1c;
+  font-family: 'Aquiline Two', cursive;
+}
+
+.stickyNote p {
+  margin: 0;
+  margin-bottom: 0.1rem;   
+  font-size: 1.3rem;
+  line-height: 1;
+  color: #4b3a24;
+}
+
+.stickyNote h2 {
+  margin-top: 0;               
+  font-size: 1.4rem;
+  font-weight: normal;
+  color: #4b3a24;
+}
 
 .genre-bar {
   display: flex;
@@ -216,7 +282,7 @@
   display: flex;
   align-items: stretch;   
   gap: 35px;
-  margin-top: 2vh;     
+  margin-top: 15vh;     
   position: relative;
 }
 
@@ -224,7 +290,7 @@
   transform: rotate(-90deg);
   transform-origin: center;
   margin: 0;
-  font-family: 'Libre Baskerville', serif;
+  /*font-family: 'Libre Baskerville', serif;*/
   font-size: 1rem;
   white-space: nowrap;
   display: inline-block;
@@ -243,7 +309,7 @@
   border-radius: 0 0 5px 5px;
   padding: 0;
   position: relative;    
-  margin-left: -2rem;
+  margin-left: 1rem;
 }
 
 .bookmark::after {
@@ -257,11 +323,11 @@
   background-color: #3C5A77;
   clip-path: polygon(50% 100%, 0 0, 100% 0);
 }
+
 .search-section {
     margin-top: 50px;
-    margin-left: auto;
-    margin-right: auto;
-    width: 95%;  
+    margin-left: 3rem;
+    margin-right: 3rem;
 }
         table {
             width: 100%;
@@ -288,7 +354,20 @@
 </head>
 <body>
 
-<h1 class="page-title">My Library</h1>
+<header class="library-header">
+  <h1>My Library</h1>
+  <div class="stat-container">
+    <div class="stickyNote">
+      <p>Total Books</p>
+      <h2 id="total-books">{{ stats.total }}</h2>
+    </div>
+    <div class="stickyNote">
+      <p>Total Pages</p>
+      <h2 id="total-pages">{{ stats.total_pages }}</h2>
+    </div>
+  </div>
+</header>
+
 
 
 <div class="recent-section">
@@ -305,8 +384,6 @@
           {% for book in recent_books %}      
       	  <div class="card">
             <img src="{{ book['cover_url'] }}" alt="Cover of {{ book['title'] }}">
-            <!-- <h2>{{ book['title'] }}</h2>
-	    <p>{{ book['author'] }}</p> -->
           </div>
 	  {% endfor %}
 	 {% endif %}
@@ -318,7 +395,7 @@
 </div>
 
 
-
+<br>
     <div class="search-section">
         <h1>Search my library</h1>
 
