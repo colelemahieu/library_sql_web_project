@@ -5,6 +5,8 @@ function scrollCarousel(direction) {
 
     const cardWidth = card.offsetWidth + 20; 
     container.scrollBy({ left: direction * cardWidth * 5, behavior: 'smooth' });
+
+    setTimeout(updateArrows, 400);
 }
 
 function updateArrows() {
@@ -14,8 +16,9 @@ function updateArrows() {
 
     const maxScroll = container.scrollWidth - container.clientWidth;
 
-    leftArrow.style.display = container.scrollLeft <= 0 ? 'none' : 'flex';
-    rightArrow.style.display = container.scrollLeft >= maxScroll ? 'none' : 'flex';
+    const tolerance = 5;
+    leftArrow.style.display = container.scrollLeft <= tolerance ? 'none' : 'flex';
+    rightArrow.style.display = container.scrollLeft >= maxScroll - tolerance ? 'none' : 'flex';
 }
 
 
