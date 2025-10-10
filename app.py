@@ -35,7 +35,7 @@ def get_read_stats():
     if total_books > 0:
         percentage = round((read / total_books) * 100)
 
-    return {"total": total_books, "total_pages": total_pages, "read": read, "percentage": percentage}
+    return {"total": total_books, "total_pages": f"{total_pages:,}", "read": read, "percentage": percentage}
 
 
 def get_books(query=None):
