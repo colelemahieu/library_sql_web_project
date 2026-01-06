@@ -1,3 +1,0 @@
-Flask==3.1.2
-requests==2.25.1
-gunicorn==23.0.0
