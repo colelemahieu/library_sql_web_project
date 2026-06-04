@@ -1,5 +1,6 @@
 from flask import Flask, render_template, request
 import sqlite3, requests
+import os
 
 app = Flask(__name__)
 
@@ -14,7 +15,9 @@ GENRE_COLOR_MAP = {
 
 
 def get_db():
-    conn = sqlite3.connect("mylibrary.db")
+    BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+    DB_PATH = os.path.join(BASE_DIR, "mylibrary.db")
+    conn = sqlite3.connect(DB_PATH)
     conn.row_factory = sqlite3.Row
     return conn
 
