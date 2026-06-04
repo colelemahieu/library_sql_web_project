@@ -22,33 +22,52 @@ def get_db():
     return conn
 
 
+
 def get_cover_url(title, author):
+    # --- Try 1: Open Library search API ---
     try:
-        ol_url = f"https://openlibrary.org/search.json?title={title}&author={author}"
+        ol_url = f"https://openlibrary.org/search.json?title={quote(title)}&author={quote(author)}"
         ol_response = requests.get(ol_url, timeout=10)
         if ol_response.status_code == 200:
             data = ol_response.json()
-            if "docs" in data and len(data["docs"]) > 0:
-                cover_id = data["docs"][0].get("cover_i")
+            docs = data.get("docs", [])
+            # Try each result, not just the first, in case cover_i is missing
+            for doc in docs[:3]:
+                cover_id = doc.get("cover_i")
                 if cover_id:
                     return f"https://covers.openlibrary.org/b/id/{cover_id}-L.jpg"
     except Exception as e:
         print("Open Library error:", e)
 
+    # --- Try 2: Open Library title-only search (broader) ---
     try:
-        gb_url = f"https://www.googleapis.com/books/v1/volumes?q=intitle:{title}+inauthor:{author}"
+        ol_url2 = f"https://openlibrary.org/search.json?title={quote(title)}"
+        ol_response2 = requests.get(ol_url2, timeout=10)
+        if ol_response2.status_code == 200:
+            data2 = ol_response2.json()
+            for doc in data2.get("docs", [])[:5]:
+                cover_id = doc.get("cover_i")
+                if cover_id:
+                    return f"https://covers.openlibrary.org/b/id/{cover_id}-L.jpg"
+    except Exception as e:
+        print("Open Library title-only error:", e)
+
+    # --- Try 3: Google Books ---
+    try:
+        gb_url = f"https://www.googleapis.com/books/v1/volumes?q=intitle:{quote(title)}+inauthor:{quote(author)}"
         gb_response = requests.get(gb_url, timeout=10)
         if gb_response.status_code == 200:
             gb_data = gb_response.json()
-            if "items" in gb_data and len(gb_data["items"]) > 0:
-                volume_info = gb_data["items"][0].get("volumeInfo", {})
-                image_links = volume_info.get("imageLinks", {})
-                if "thumbnail" in image_links:
-                    return image_links.get("large") or image_links.get("medium") or image_links["thumbnail"]
+            items = gb_data.get("items", [])
+            for item in items[:3]:
+                image_links = item.get("volumeInfo", {}).get("imageLinks", {})
+                if image_links:
+                    return image_links.get("large") or image_links.get("medium") or image_links.get("thumbnail")
     except Exception as e:
         print("Google Books error:", e)
 
     return "/static/images/placeholder.png"
+
 
 
 def migrate_add_cover_column():
