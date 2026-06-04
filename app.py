@@ -1,4 +1,5 @@
 from flask import Flask, render_template, request
+from urllib.parse import quote
 import sqlite3, requests
 import os
 
@@ -24,49 +25,74 @@ def get_db():
 
 
 def get_cover_url(title, author):
-    # --- Try 1: Open Library search API ---
+    # --- Try 1: Open Library title + author ---
     try:
-        ol_url = f"https://openlibrary.org/search.json?title={quote(title)}&author={quote(author)}"
+        ol_url = f"https://openlibrary.org/search.json?title={quote(title)}&author={quote(author)}&limit=5"
         ol_response = requests.get(ol_url, timeout=10)
         if ol_response.status_code == 200:
-            data = ol_response.json()
-            docs = data.get("docs", [])
-            # Try each result, not just the first, in case cover_i is missing
-            for doc in docs[:3]:
+            for doc in ol_response.json().get("docs", [])[:5]:
                 cover_id = doc.get("cover_i")
                 if cover_id:
                     return f"https://covers.openlibrary.org/b/id/{cover_id}-L.jpg"
     except Exception as e:
-        print("Open Library error:", e)
+        print("Open Library (title+author) error:", e)
 
-    # --- Try 2: Open Library title-only search (broader) ---
+    # --- Try 2: Open Library title only ---
     try:
-        ol_url2 = f"https://openlibrary.org/search.json?title={quote(title)}"
+        ol_url2 = f"https://openlibrary.org/search.json?title={quote(title)}&limit=5"
         ol_response2 = requests.get(ol_url2, timeout=10)
         if ol_response2.status_code == 200:
-            data2 = ol_response2.json()
-            for doc in data2.get("docs", [])[:5]:
+            for doc in ol_response2.json().get("docs", [])[:5]:
                 cover_id = doc.get("cover_i")
                 if cover_id:
                     return f"https://covers.openlibrary.org/b/id/{cover_id}-L.jpg"
     except Exception as e:
-        print("Open Library title-only error:", e)
+        print("Open Library (title only) error:", e)
 
-    # --- Try 3: Google Books ---
+    # --- Try 3: Open Library by ISBN via title search (uses cover endpoint directly) ---
     try:
-        gb_url = f"https://www.googleapis.com/books/v1/volumes?q=intitle:{quote(title)}+inauthor:{quote(author)}"
+        ol_url3 = f"https://openlibrary.org/search.json?title={quote(title)}&limit=5"
+        ol_response3 = requests.get(ol_url3, timeout=10)
+        if ol_response3.status_code == 200:
+            for doc in ol_response3.json().get("docs", [])[:5]:
+                isbns = doc.get("isbn", [])
+                if isbns:
+                    return f"https://covers.openlibrary.org/b/isbn/{isbns[0]}-L.jpg"
+    except Exception as e:
+        print("Open Library (ISBN) error:", e)
+
+    # --- Try 4: Google Books ---
+    try:
+        gb_url = f"https://www.googleapis.com/books/v1/volumes?q=intitle:{quote(title)}+inauthor:{quote(author)}&maxResults=5"
         gb_response = requests.get(gb_url, timeout=10)
         if gb_response.status_code == 200:
-            gb_data = gb_response.json()
-            items = gb_data.get("items", [])
-            for item in items[:3]:
+            for item in gb_response.json().get("items", [])[:5]:
                 image_links = item.get("volumeInfo", {}).get("imageLinks", {})
                 if image_links:
-                    return image_links.get("large") or image_links.get("medium") or image_links.get("thumbnail")
+                    # Upgrade thumbnail to larger size, remove curl parameter
+                    url = (image_links.get("large") or 
+                           image_links.get("medium") or 
+                           image_links.get("thumbnail", ""))
+                    if url:
+                        # Force HTTPS and request higher resolution
+                        url = url.replace("http://", "https://").replace("&edge=curl", "")
+                        url = url.replace("zoom=1", "zoom=3")
+                        return url
     except Exception as e:
         print("Google Books error:", e)
 
     return "/static/images/placeholder.png"
+
+
+
+def reset_missing_covers():
+    """Reset placeholder covers so backfill retries them."""
+    conn = get_db()
+    cur = conn.cursor()
+    cur.execute("UPDATE books SET cover_url = NULL WHERE cover_url = '/static/images/placeholder.png'")
+    conn.commit()
+    conn.close()
+    print("Reset placeholder covers for retry.")
 
 
 
@@ -203,5 +229,6 @@ def search():
 
 if __name__ == "__main__":
     migrate_add_cover_column()
+    reset_missing_covers()
     backfill_covers()
     app.run(debug=True)
