@@ -246,6 +246,5 @@ def search():
 if __name__ == "__main__":
     migrate_add_cover_column()
     reset_missing_covers()
-    fix_bad_cover("Master of the World", "Verne")
     backfill_covers()
     app.run(debug=True)
