@@ -23,8 +23,9 @@ def get_db():
     return conn
 
 
-
 def get_cover_url(title, author):
+    author_last = author.split()[-1].lower()
+
     # --- Try 1: Open Library title + author ---
     try:
         ol_url = f"https://openlibrary.org/search.json?title={quote(title)}&author={quote(author)}&limit=5"
@@ -37,31 +38,36 @@ def get_cover_url(title, author):
     except Exception as e:
         print("Open Library (title+author) error:", e)
 
-    # --- Try 2: Open Library title only ---
+    # --- Try 2: Open Library title only, but filter by author last name ---
     try:
-        ol_url2 = f"https://openlibrary.org/search.json?title={quote(title)}&limit=5"
+        ol_url2 = f"https://openlibrary.org/search.json?title={quote(title)}&limit=10"
         ol_response2 = requests.get(ol_url2, timeout=10)
         if ol_response2.status_code == 200:
-            for doc in ol_response2.json().get("docs", [])[:5]:
-                cover_id = doc.get("cover_i")
-                if cover_id:
-                    return f"https://covers.openlibrary.org/b/id/{cover_id}-L.jpg"
+            for doc in ol_response2.json().get("docs", [])[:10]:
+                # Check that at least one listed author matches
+                doc_authors = [a.lower() for a in doc.get("author_name", [])]
+                if any(author_last in a for a in doc_authors):
+                    cover_id = doc.get("cover_i")
+                    if cover_id:
+                        return f"https://covers.openlibrary.org/b/id/{cover_id}-L.jpg"
     except Exception as e:
-        print("Open Library (title only) error:", e)
+        print("Open Library (title+author filtered) error:", e)
 
-    # --- Try 3: Open Library by ISBN via title search (uses cover endpoint directly) ---
+    # --- Try 3: Open Library ISBN, filtered by author last name ---
     try:
-        ol_url3 = f"https://openlibrary.org/search.json?title={quote(title)}&limit=5"
+        ol_url3 = f"https://openlibrary.org/search.json?title={quote(title)}&limit=10"
         ol_response3 = requests.get(ol_url3, timeout=10)
         if ol_response3.status_code == 200:
-            for doc in ol_response3.json().get("docs", [])[:5]:
-                isbns = doc.get("isbn", [])
-                if isbns:
-                    return f"https://covers.openlibrary.org/b/isbn/{isbns[0]}-L.jpg"
+            for doc in ol_response3.json().get("docs", [])[:10]:
+                doc_authors = [a.lower() for a in doc.get("author_name", [])]
+                if any(author_last in a for a in doc_authors):
+                    isbns = doc.get("isbn", [])
+                    if isbns:
+                        return f"https://covers.openlibrary.org/b/isbn/{isbns[0]}-L.jpg"
     except Exception as e:
-        print("Open Library (ISBN) error:", e)
+        print("Open Library (ISBN filtered) error:", e)
 
-    # --- Try 4: Google Books ---
+    # --- Try 4: Google Books (already uses author in query) ---
     try:
         gb_url = f"https://www.googleapis.com/books/v1/volumes?q=intitle:{quote(title)}+inauthor:{quote(author)}&maxResults=5"
         gb_response = requests.get(gb_url, timeout=10)
@@ -69,12 +75,10 @@ def get_cover_url(title, author):
             for item in gb_response.json().get("items", [])[:5]:
                 image_links = item.get("volumeInfo", {}).get("imageLinks", {})
                 if image_links:
-                    # Upgrade thumbnail to larger size, remove curl parameter
-                    url = (image_links.get("large") or 
-                           image_links.get("medium") or 
+                    url = (image_links.get("large") or
+                           image_links.get("medium") or
                            image_links.get("thumbnail", ""))
                     if url:
-                        # Force HTTPS and request higher resolution
                         url = url.replace("http://", "https://").replace("&edge=curl", "")
                         url = url.replace("zoom=1", "zoom=3")
                         return url
@@ -107,6 +111,18 @@ def migrate_add_cover_column():
     except sqlite3.OperationalError:
         pass  # Column already exists
     conn.close()
+
+
+def fix_bad_cover(title_fragment, author_fragment):
+    """Clear a cached cover for a specific book so backfill re-fetches it."""
+    conn = get_db()
+    conn.execute(
+        "UPDATE books SET cover_url = NULL WHERE title LIKE ? AND author LIKE ?",
+        (f"%{title_fragment}%", f"%{author_fragment}%")
+    )
+    conn.commit()
+    conn.close()
+    print(f"Cleared cover for books matching title='{title_fragment}', author='{author_fragment}'")
 
 
 def backfill_covers():
@@ -230,5 +246,6 @@ def search():
 if __name__ == "__main__":
     migrate_add_cover_column()
     reset_missing_covers()
+    fix_bad_cover("Master of the World", "Verne")
     backfill_covers()
     app.run(debug=True)
