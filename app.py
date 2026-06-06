@@ -38,20 +38,19 @@ def get_cover_url(title, author):
     except Exception as e:
         print("Open Library (title+author) error:", e)
 
-    # --- Try 2: Open Library title only, but filter by author last name ---
+    # --- Try 2: Open Library title only, filter by author last name ---
     try:
         ol_url2 = f"https://openlibrary.org/search.json?title={quote(title)}&limit=10"
         ol_response2 = requests.get(ol_url2, timeout=10)
         if ol_response2.status_code == 200:
             for doc in ol_response2.json().get("docs", [])[:10]:
-                # Check that at least one listed author matches
                 doc_authors = [a.lower() for a in doc.get("author_name", [])]
                 if any(author_last in a for a in doc_authors):
                     cover_id = doc.get("cover_i")
                     if cover_id:
                         return f"https://covers.openlibrary.org/b/id/{cover_id}-L.jpg"
     except Exception as e:
-        print("Open Library (title+author filtered) error:", e)
+        print("Open Library (title only, author filtered) error:", e)
 
     # --- Try 3: Open Library ISBN, filtered by author last name ---
     try:
@@ -67,7 +66,28 @@ def get_cover_url(title, author):
     except Exception as e:
         print("Open Library (ISBN filtered) error:", e)
 
-    # --- Try 4: Google Books (already uses author in query) ---
+    # --- Try 4: Open Library Works API  ---
+    try:
+        works_url = f"https://openlibrary.org/search.json?q={quote(title + ' ' + author)}&limit=10"
+        works_response = requests.get(works_url, timeout=10)
+        if works_response.status_code == 200:
+            for doc in works_response.json().get("docs", [])[:10]:
+                doc_authors = [a.lower() for a in doc.get("author_name", [])]
+                if any(author_last in a for a in doc_authors):
+                    # Try cover_edition_key for a specific edition's cover
+                    cover_edition_key = doc.get("cover_edition_key")
+                    if cover_edition_key:
+                        edition_url = f"https://openlibrary.org/books/{cover_edition_key}.json"
+                        ed_response = requests.get(edition_url, timeout=10)
+                        if ed_response.status_code == 200:
+                            ed_data = ed_response.json()
+                            covers = ed_data.get("covers", [])
+                            if covers and covers[0] > 0:
+                                return f"https://covers.openlibrary.org/b/id/{covers[0]}-L.jpg"
+    except Exception as e:
+        print("Open Library (works/edition) error:", e)
+
+    # --- Try 5: Google Books ---
     try:
         gb_url = f"https://www.googleapis.com/books/v1/volumes?q=intitle:{quote(title)}+inauthor:{quote(author)}&maxResults=5"
         gb_response = requests.get(gb_url, timeout=10)
@@ -112,17 +132,6 @@ def migrate_add_cover_column():
         pass  # Column already exists
     conn.close()
 
-
-def fix_bad_cover(title_fragment, author_fragment):
-    """Clear a cached cover for a specific book so backfill re-fetches it."""
-    conn = get_db()
-    conn.execute(
-        "UPDATE books SET cover_url = NULL WHERE title LIKE ? AND author LIKE ?",
-        (f"%{title_fragment}%", f"%{author_fragment}%")
-    )
-    conn.commit()
-    conn.close()
-    print(f"Cleared cover for books matching title='{title_fragment}', author='{author_fragment}'")
 
 
 def backfill_covers():
